@@ -2,8 +2,6 @@
 
 Biblioteca JavaScript **frontend**, leve e sem dependências, para **captura de câmera**, **captura de tela** e **extração de frames** em navegadores modernos.
 
-> O código de `src/` usa apenas APIs do navegador (`navigator.mediaDevices`, DOM, `<video>`, `<canvas>`, `Blob`, `ImageBitmap` etc.). O Node.js aparece apenas para executar os testes automatizados deste repositório e para o empacotamento npm; **não é necessário Node.js para usar a biblioteca no navegador**.
-
 A API é dividida em dois módulos independentes:
 
 - `captura.camera` — abre a câmera, alterna entre frontal e traseira, captura frames e encerra a sessão.
@@ -37,7 +35,6 @@ const png = await captura.camera.frame()
 - Contexto seguro: **HTTPS** ou **localhost**. Em `http://` fora de localhost, o navegador normalmente bloqueia o acesso à câmera e à tela.
 - Permissão explícita do usuário para câmera, microfone (quando `audio: true`) e compartilhamento de tela.
 - A captura de tela sempre depende da interface do navegador para o usuário escolher a fonte e autorizar.
-- Node.js não é necessário em produção. Para os testes automatizados do repositório, use Node.js 18.8 ou superior.
 
 Navegadores modernos como Chrome, Edge, Firefox e Safari suportam as APIs principais. A disponibilidade de áudio em `getDisplayMedia()`, da codificação WebP e de `createImageBitmap()` varia conforme navegador, sistema operacional e dispositivo. A biblioteca verifica a disponibilidade e lança `NotSupportedError` quando o recurso não existe.
 
@@ -81,7 +78,7 @@ O bundler resolve o especificador `captura-cm` e empacota `src/index.js` e seus 
 
 ### 2. Sem bundler, com import map
 
-O navegador não resolve sozinho o especificador `captura-cm`. Você pode apontar para o arquivo real usando um import map. Sirva também a pasta `node_modules` (ou copie `node_modules/captura-cm/src` para uma pasta pública):
+O navegador não resolve sozinho o especificador `captura-cm`. Use um import map para apontar para o arquivo real. Sirva também a pasta `node_modules` (ou copie `node_modules/captura-cm/src` para uma pasta pública):
 
 ```html
 <script type="importmap">
@@ -101,7 +98,7 @@ O navegador não resolve sozinho o especificador `captura-cm`. Você pode aponta
 
 ### 3. Sem bundler, importando a URL do arquivo
 
-Se você copiou a pasta `src` do pacote para o seu projeto:
+Se a pasta `src` do pacote for copiada para o projeto:
 
 ```html
 <script type="module">
@@ -131,9 +128,9 @@ ou, servindo os módulos originais:
 </script>
 ```
 
-### Sobre os exemplos deste repositório
+### Sobre os exemplos
 
-Os arquivos em `exemplos/` importam `../src/index.js` porque estão dentro do próprio pacote. Em um projeto consumidor, troque esse caminho por `'captura-cm'` (com bundler/import map) ou pela URL do arquivo servido. O restante do código dos exemplos é o mesmo.
+Os exemplos usam `../src/index.js` porque fazem parte do próprio pacote. Em um projeto consumidor, importe `'captura-cm'` (com bundler/import map) ou a URL do arquivo servido. O restante do código dos exemplos é o mesmo.
 
 ## Início rápido
 
@@ -198,9 +195,9 @@ const pngTela = await captura.tela.frame()
 captura.tela.parar()
 ```
 
-Nos dois casos, `frame()`, `alternar()` (câmera) e `parar()` funcionam normalmente. Na câmera, `iniciar()` sem argumentos também funciona: usa a câmera traseira e não exibe preview. O retorno `video` continua sendo um `<video>` real; se quiser exibir depois, você mesmo pode anexá-lo a um contêiner.
+Nos dois casos, `frame()`, `alternar()` (câmera) e `parar()` funcionam normalmente. Na câmera, `iniciar()` sem argumentos também funciona: usa a câmera traseira e não exibe preview. O retorno `video` continua sendo um `<video>` real; para exibi-lo depois, anexe o elemento a um contêiner.
 
-O painel `exemplos/index.html` tem os botões **Iniciar sem preview** e **Compartilhar sem preview**.
+A página `exemplos/index.html` inclui os botões **Iniciar sem preview** e **Compartilhar sem preview**.
 
 Isso não é uma captura invisível para o usuário: o navegador continua exigindo autorização e mostrando os indicadores de câmera/tela em uso. A biblioteca não contorna permissões.
 
@@ -526,7 +523,7 @@ await captura.camera.frame({
 // Canvas 100×100
 ```
 
-A biblioteca permite ampliar a imagem. Se você pedir dimensões maiores que o vídeo, o frame será escalado para cima.
+A biblioteca permite ampliar a imagem. Se forem solicitadas dimensões maiores que o vídeo, o frame será escalado para cima.
 
 ## Erros
 
@@ -584,7 +581,7 @@ try {
 - O frame capturado é o quadro atual do vídeo. Se a reprodução estiver pausada ou a transmissão não estiver entregando quadros, o frame pode não mudar.
 - Na captura sem preview, o `<video>` interno continua decodificando a transmissão e consumindo recursos. O navegador também continua mostrando o indicador de câmera/tela em uso.
 - A captura sem preview usa um `<video>` não anexado ao DOM. Se algum navegador/ambiente específico deixar de entregar quadros nesse modo, anexe o `video` retornado a um contêiner visualmente oculto via CSS (`position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none`).
-- Os testes automatizados usam APIs simuladas. **Não** foram executados testes com câmera física nem captura real de tela nesta implementação.
+- A suíte automatizada usa APIs simuladas; ela não substitui testes manuais com câmera física nem captura real de tela.
 
 ## Segurança e privacidade
 
@@ -597,9 +594,9 @@ try {
 
 ## Exemplos completos
 
-Os arquivos em `exemplos/` estão prontos para uso:
+O projeto inclui estes exemplos executáveis:
 
-- `exemplos/index.html` — painel único com câmera e captura de tela (recomendado).
+- `exemplos/index.html` — página única com câmera e captura de tela (recomendado).
 - `exemplos/camera.html` — exemplo focado em câmera.
 - `exemplos/tela.html` — exemplo focado em captura de tela.
 
@@ -611,7 +608,7 @@ python3 -m http.server 8080
 
 Depois abra:
 
-- `http://localhost:8080/` — redireciona para o painel de testes.
+- `http://localhost:8080/` — redireciona para a página de testes.
 - `http://localhost:8080/exemplos/index.html` — testa câmera e tela na mesma página.
 - `http://localhost:8080/exemplos/camera.html`
 - `http://localhost:8080/exemplos/tela.html`
@@ -620,14 +617,14 @@ Depois abra:
 
 A câmera e a tela usam APIs diferentes. Se a câmera funciona mas a captura de tela não, verifique:
 
-1. **O navegador expõe `getDisplayMedia`?** O painel `exemplos/index.html` mostra isso no diagnóstico. Muitos navegadores móveis e webviews não implementam essa API.
+1. **O navegador expõe `getDisplayMedia`?** A página `exemplos/index.html` mostra isso no diagnóstico. Muitos navegadores móveis e webviews não implementam essa API.
 2. **A página está em uma aba normal?** IDEs, previews embutidos e iframes podem bloquear a captura de tela. Em iframe, a permissão `display-capture` precisa ser concedida pelo site que incorpora a página. A câmera usa uma permissão diferente (`camera`), por isso pode funcionar enquanto a tela falha.
 3. **É HTTPS ou localhost?** A API exige contexto seguro.
 4. **Houve interação do usuário?** Chame `tela.iniciar()` a partir de um clique. O navegador não permite abrir o seletor de tela automaticamente.
-5. **Você cancelou o seletor?** O navegador rejeita com `NotAllowedError`.
+5. **O seletor foi cancelado?** O navegador rejeita com `NotAllowedError`.
 6. **O sistema/navegador restringe a captura?** Em alguns ambientes Linux/Wayland, é necessário um portal de captura; em headless/automação, a API pode não estar disponível.
 
-O painel exibe `erro.name` e `erro.message` na tela e imprime o erro completo no console. Se a captura falhar, abra o DevTools e confira a mensagem. Os erros mais comuns são `NotSupportedError`, `NotAllowedError` e `SecurityError`.
+A página exibe `erro.name` e `erro.message` na tela e imprime o erro completo no console. Se a captura falhar, abra o DevTools e confira a mensagem. Os erros mais comuns são `NotSupportedError`, `NotAllowedError` e `SecurityError`.
 
 ### `exemplos/camera.html`
 
@@ -1164,68 +1161,9 @@ O painel exibe `erro.name` e `erro.message` na tela e imprime o erro completo no
 </html>
 ```
 
-## Estrutura do projeto
+## Contribuição
 
-```text
-captura-cm/
-├── index.html         # redireciona para o painel de testes
-├── src/
-│   ├── index.js       # API pública (captura.camera e captura.tela)
-│   ├── camera.js      # sessão de câmera, alternância, frames e encerramento
-│   ├── tela.js        # sessão de captura de tela, frames e encerramento
-│   ├── formatos.js    # validação, canvas, conversão e redimensionamento
-│   └── midia.js       # utilitários internos de DOM, mídia e ciclo de vida
-├── exemplos/
-│   ├── index.html     # painel com câmera e captura de tela
-│   ├── camera.html
-│   └── tela.html
-├── test/
-│   ├── apoio.js
-│   └── captura.test.js
-├── package.json
-├── README.md
-└── LICENSE
-```
-
-`midia.js` foi adicionado porque câmera e tela compartilham a mesma lógica de
-criação de `<video>`, resolução de contêiner, reprodução, observação do fim das
-faixas e limpeza. Ele é interno e não faz parte da API pública.
-
-## Testes
-
-```sh
-npm test
-```
-
-A suíte usa o test runner nativo do Node.js (Node.js 18.8 ou superior) e APIs de mídia simuladas. Ela cobre:
-
-- Validação de opções, formatos, qualidade e dimensões.
-- Cálculo de dimensões proporcionais, contidas e com distorção.
-- Chamadas antes da inicialização.
-- Erros de permissão, contexto inseguro e APIs ausentes.
-- Criação de vídeo, áudio padrão, seleção frontal/traseira, captura sem preview e restrições.
-- Alternância de câmera com APIs simuladas, incluindo falha e câmera única.
-- Encerramento, reinicialização, cancelamento e concorrência.
-- Todos os tipos de retorno: `Blob`, Base64, Data URL, `ArrayBuffer`, `Uint8Array`, `ImageBitmap` e canvas.
-- Sessões independentes de câmera e tela.
-- Encerramento automático quando a faixa de tela termina.
-
-Resultado da execução local desta versão: **40 testes, 40 aprovados, 0 falhas**.
-
-Importante: os testes **não** validam câmera física, permissões reais do navegador
-nem captura real de tela. Esses cenários precisam ser testados manualmente em um
-navegador com HTTPS ou localhost.
-
-## Publicação
-
-O `package.json` já está configurado para publicação como pacote ESM:
-
-```sh
-npm pack --dry-run
-npm publish
-```
-
-Não há etapa de build: os arquivos de `src/` são publicados diretamente como ESM. O pacote inclui `src/`, `exemplos/`, `README.md` e `LICENSE`.
+Instruções de desenvolvimento, estrutura do projeto, testes e publicação estão em [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Autor
 
