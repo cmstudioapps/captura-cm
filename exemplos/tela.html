@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>captura-cm — tela</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f4f5f7;
+      color: #18191c;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .aviso {
+      padding: 12px 16px;
+      border-left: 4px solid #d98b00;
+      background: #fff7e6;
+      border-radius: 6px;
+    }
+
+    .preview {
+      display: grid;
+      place-items: center;
+      min-height: 260px;
+      margin: 16px 0;
+      overflow: hidden;
+      border: 1px solid #ccd0d6;
+      border-radius: 10px;
+      background: #111;
+    }
+
+    .preview video {
+      display: block;
+      width: 100%;
+      max-height: 70vh;
+    }
+
+    .acoes {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    button {
+      padding: 9px 14px;
+      border: 1px solid #b8bec8;
+      border-radius: 7px;
+      background: #fff;
+      color: #18191c;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #eef1f5;
+    }
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #status {
+      min-height: 1.5em;
+      font-weight: 600;
+    }
+
+    #preview {
+      max-width: 100%;
+      border-radius: 10px;
+      border: 1px solid #ccd0d6;
+      background: #111;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #17181b; color: #eef0f4; }
+      .aviso { background: #2b2416; border-color: #d98b00; }
+      button { background: #26282d; color: #eef0f4; border-color: #444850; }
+      button:hover { background: #32353c; }
+      #preview, .preview { border-color: #444850; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>captura-cm — captura de tela</h1>
+
+    <p class="aviso">
+      Sirva esta página por <strong>HTTP em localhost</strong> ou por
+      <strong>HTTPS</strong>. A escolha da tela, janela ou aba e a autorização
+      são sempre controladas pelo navegador. Exemplo:
+      <code>python3 -m http.server 8080</code> e abra
+      <code>http://localhost:8080/exemplos/tela.html</code>.
+    </p>
+
+    <p>
+      <a href="in</p>dex.html">Painel com câmera e tela</a>
+      &middot;
+      <a href="camera.html">Testar câmera</a>
+    </p>
+
+    <div id="tela" class="preview"></div>
+
+    <div class="acoes">
+      <label>
+        <input id="com-audio" type="checkbox">
+        Capturar áudio (quando suportado)
+      </label>
+      <button id="iniciar" type="button">Compartilhar tela</button>
+      <button id="parar" type="button">Parar</button>
+    </div>
+
+    <div class="acoes">
+      <button id="frame-png" type="button">Baixar PNG</button>
+      <button id="frame-jpeg" type="button">Baixar JPEG 0.8</button>
+      <button id="frame-base64" type="button">Prévia Base64</button>
+      <button id="frame-canvas" type="button">Prévia canvas 50%</button>
+    </div>
+
+    <p id="status">Captura de tela inativa.</p>
+    <img id="preview" alt="Último frame da tela capturado" hidden>
+  </main>
+
+  <script type="module">
+    import captura from '../src/index.js'
+
+    const status = document.querySelector('#status')
+    const preview = document.querySelector('#preview')
+    const checkboxAudio = document.querySelector('#com-audio')
+
+    let estavaAtiva = false
+
+    function mostrar(mensagem) {
+      status.textContent = mensagem
+    }
+
+    function mostrarErro(erro) {
+      mostrar(`Erro: ${erro.message}`)
+      console.error(erro)
+    }
+
+    document.querySelector('#iniciar').addEventListener('click', async () => {
+      try {
+        const { video } = await captura.tela.iniciar({
+          elemento: '#tela',
+          audio: checkboxAudio.checked
+        })
+
+        estavaAtiva = true
+        mostrar(`Compartilhamento ativo: ${video.videoWidth}×${video.videoHeight}.`)
+      } catch (erro) {
+        mostrarErro(erro)
+      }
+    })
+
+    document.querySelector('#parar').addEventListener('click', () => {
+      const haviaSessao = captura.tela.parar()
+      estavaAtiva = false
+      preview.hidden = true
+      preview.removeAttribute('src')
+      mostrar(haviaSessao ? 'Compartilhamento encerrado.' : 'A captura já estava inativa.')
+    })
+
+    async function baixarFrame(opcoes, nomeArquivo) {
+      try {
+        const blob = await captura.tela.frame(opcoes)
+        const url = URL.createObjectURL(blob)
+
+        preview.src = url
+        preview.hidden = false
+
+        const link = document.createElement('a')
+        link.href = url
+        link.download = nomeArquivo
+        link.click()
+
+        mostrar(`Frame capturado: ${nomeArquivo}.`)
+        setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      } catch (erro) {
+        mostrarErro(erro)
+      }
+    }
+
+    document.querySelector('#frame-png').addEventListener('click', () => {
+      baixarFrame({ formato: 'blob' }, 'tela.png')
+    })
+
+    document.querySelector('#frame-jpeg').addEventListener('click', () => {
+      baixarFrame({ formato: 'jpeg', qualidade: 0.8 }, 'tela.jpg')
+    })
+
+    document.querySelector('#frame-base64').addEventListener('click', async () => {
+      try {
+        const base64 = await captura.tela.frame({
+          formato: 'base64',
+          tipo: 'png'
+        })
+
+        preview.src = `data:image/png;base64,${base64}`
+        preview.hidden = false
+        mostrar('Frame Base64 exibido.')
+      } catch (erro) {
+        mostrarErro(erro)
+      }
+    })
+
+    document.querySelector('#frame-canvas').addEventListener('click', async () => {
+      try {
+        const video = document.querySelector('#tela video')
+        if (!video) {
+          throw new Error('Compartilhe uma tela antes de capturar.')
+        }
+
+        const largura = Math.max(1, Math.round(video.videoWidth * 0.5))
+        const canvas = await captura.tela.frame({
+          formato: 'canvas',
+          largura
+        })
+
+        preview.src = canvas.toDataURL('image/png')
+        preview.hidden = false
+        mostrar(`Canvas exibido (${canvas.width}×${canvas.height}).`)
+      } catch (erro) {
+        mostrarErro(erro)
+      }
+    })
+
+    // Detecta o encerramento feito pela interface do navegador.
+    setInterval(() => {
+      const ativa = captura.tela.ativa()
+
+      if (estavaAtiva && !ativa) {
+        estavaAtiva = false
+        preview.hidden = true
+        preview.removeAttribute('src')
+        mostrar('O compartilhamento foi encerrado pela interface do navegador.')
+      }
+    }, 500)
+
+    window.addEventListener('beforeunload', () => captura.tela.parar())
+  </script>
+</body>
+</html>

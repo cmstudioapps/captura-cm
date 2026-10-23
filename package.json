@@ -1,0 +1,38 @@
+{
+  "name": "captura-cm",
+  "version": "1.0.0",
+  "description": "Biblioteca leve para captura de câmera, captura de tela e extração de frames em navegadores modernos.",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "browser": "./src/index.js",
+  "exports": {
+    ".": {
+      "browser": "./src/index.js",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "exemplos",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "camera",
+    "webcam",
+    "screen-capture",
+    "getusermedia",
+    "getdisplaymedia",
+    "frame-capture",
+    "canvas",
+    "browser"
+  ],
+  "author": "Caio MUltiversando",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/captura.test.js"
+  }
+}

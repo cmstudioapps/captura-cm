@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>captura-cm — painel de testes</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f4f5f7;
+      color: #18191c;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.15rem;
+    }
+
+    .aviso {
+      padding: 12px 16px;
+      border-left: 4px solid #d98b00;
+      background: #fff7e6;
+      border-radius: 6px;
+    }
+
+    .diagnostico {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin: 14px 0 20px;
+      padding: 12px 16px;
+      border: 1px solid #ccd0d6;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 0.9rem;
+    }
+
+    .diagnostico strong {
+      flex-basis: 100%;
+    }
+
+    .ok {
+      color: #1f7a3d;
+    }
+
+    .falha {
+      color: #b42318;
+    }
+
+    .grade {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 20px;
+    }
+
+    .cartao {
+      padding: 18px;
+      border: 1px solid #ccd0d6;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .preview {
+      display: grid;
+      place-items: center;
+      min-height: 240px;
+      margin: 12px 0;
+      overflow: hidden;
+      border: 1px solid #ccd0d6;
+      border-radius: 8px;
+      background: #111;
+    }
+
+    .preview video {
+      display: block;
+      width: 100%;
+      max-height: 50vh;
+    }
+
+    .acoes {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 8px 13px;
+      border: 1px solid #b8bec8;
+      border-radius: 7px;
+      background: #fff;
+      color: #18191c;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #eef1f5;
+    }
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+
+    .status {
+      min-height: 3em;
+      margin-bottom: 0;
+      font-weight: 600;
+      white-space: pre-line;
+    }
+
+    .links {
+      margin-top: 22px;
+      font-size: 0.9rem;
+    }
+
+    .links a {
+      color: #0b63c5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #17181b; color: #eef0f4; }
+      .aviso { background: #2b2416; border-color: #d98b00; }
+      .diagnostico, .cartao { background: #212328; border-color: #444850; }
+      button { background: #26282d; color: #eef0f4; border-color: #444850; }
+      button:hover { background: #32353c; }
+      .preview { border-color: #444850; }
+      .ok { color: #6fcf97; }
+      .falha { color: #ff8c82; }
+      .links a { color: #7db8ff; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>captura-cm — painel de testes</h1>
+
+    <p class="aviso">
+      Sirva a raiz do projeto por <strong>HTTP em localhost</strong> ou por
+      <strong>HTTPS</strong>. Exemplo:
+      <code>python3 -m http.server 8080</code> e abra
+      <code>http://localhost:8080/exemplos/index.html</code>.
+      A captura de tela também precisa de uma <strong>interação do usuário</strong>
+      e do seletor do navegador. Se esta página estiver dentro de um iframe/IDE,
+      abra-a em uma aba normal do navegador.
+      Os botões <strong>sem preview<</strong>/strong> mantêm o vídeo interno; o navegador
+      continua indicando que a câmera ou a tela está em uso.
+    </p>
+
+    <div id="diagnostico" class="diagnostico" aria-live="polite">
+      <strong>Diagnóstico do ambiente</strong>
+    </div>
+
+    <div class="grade">
+      <section class="cartao">
+        <h2>Câmera</h2>
+        <div id="camera" class="preview"></div>
+
+        <div class="acoes">
+          <button id="camera-traseira" type="button">Iniciar traseira</button>
+          <button id="camera-frontal" type="button">Iniciar frontal</button>
+          <button id="camera-alternar" type="button">Alternar</button>
+          <button id="camera-parar" type="button">Parar</button>
+          <button id="camera-frame" type="button">Baixar PNG</button>
+          <button id="camera-sem-preview" type="button">Iniciar sem preview</button>
+        </div>
+
+        <p id="camera-status" class="status">Câmera inativa.</p>
+      </section>
+
+      <section class="cartao">
+        <h2>Captura de tela</h2>
+        <div id="tela" class="preview"></div>
+
+        <div class="acoes">
+          <label>
+            <input id="tela-audio" type="checkbox">
+            Capturar áudio
+          </label>
+          <button id="tela-iniciar" type="button">Compartilhar tela</button>
+          <button id="tela-sem-preview" type="button">Compartilhar sem preview</button>
+          <button id="tela-parar" type="button">Parar</button>
+          <button id="tela-frame" type="button">Baixar PNG</button>
+        </div>
+
+        <p id="tela-status" class="status">Captura de tela inativa.</p>
+      </section>
+    </div>
+
+    <p class="links">
+      <a href="camera.html">Abrir exemplo só de câmera</a>
+      &middot;
+      <a href="tela.html">Abrir exemplo só de captura de tela</a>
+    </p>
+  </main>
+
+  <script type="module">
+    import captura from '../src/index.js'
+
+    const cameraStatus = document.querySelector('#camera-status')
+    const telaStatus = document.querySelector('#tela-status')
+    const telaAudio = document.querySelector('#tela-audio')
+
+    let telaEstavaAtiva = false
+
+    function mostrarCamera(mensagem) {
+      cameraStatus.textContent = mensagem
+    }
+
+    function mostrarTela(mensagem) {
+      telaStatus.textContent = mensagem
+    }
+
+    function mostrarErro(mostrar, erro) {
+      mostrar(`Erro [${erro.name || 'Error'}]: ${erro.message}`)
+      console.error(erro)
+    }
+
+    function baixarBlob(blob, nomeArquivo) {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+
+      link.href = url
+      link.download = nomeArquivo
+      link.click()
+
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    }
+
+    function adicionarDiagnostico(rotulo, valor, disponivel) {
+      const item = document.createElement('span')
+      item.className = disponivel ? 'ok' : 'falha'
+      item.textContent = `${rotulo}: ${valor}`
+      document.querySelector('#diagnostico').append(item)
+    }
+
+    const dispositivos = navigator.mediaDevices
+
+    adicionarDiagnostico(
+      'Contexto seguro',
+      window.isSecureContext ? 'sim' : 'não (use HTTPS ou localhost)',
+      window.isSecureContext === true
+    )
+    adicionarDiagnostico(
+      'getUserMedia',
+      dispositivos && typeof dispositivos.getUserMedia === 'function'
+        ? 'disponível'
+        : 'indisponível',
+      Boolean(dispositivos && typeof dispositivos.getUserMedia === 'function')
+    )
+    adicionarDiagnostico(
+      'getDisplayMedia',
+      dispositivos && typeof dispositivos.getDisplayMedia === 'function'
+        ? 'disponível'
+        : 'indisponível neste navegador/plataforma',
+      Boolean(dispositivos && typeof dispositivos.getDisplayMedia === 'function')
+    )
+    adicionarDiagnostico(
+      'Origem',
+      `${location.protocol}//${location.host}`,
+      window.isSecureContext === true
+    )
+
+    // Câmera
+
+    async function iniciarCamera(camera) {
+      try {
+        const { video } = await captura.camera.iniciar({
+          elemento: '#camera',
+          camera
+        })
+        mostrarCamera(
+          `Câmera ${camera} ativa: ${video.videoWidth}×${video.videoHeight}.`
+        )
+      } catch (erro) {
+        mostrarErro(mostrarCamera, erro)
+      }
+    }
+
+    document.querySelector('#camera-traseira').addEventListener('click', () => {
+      iniciarCamera('traseira')
+    })
+
+    document.querySelector('#camera-frontal').addEventListener('click', () => {
+      iniciarCamera('frontal')
+    })
+
+    document.querySelector('#camera-alternar').addEventListener('click', async () => {
+      try {
+        await captura.camera.alternar()
+        mostrarCamera('Câmera alternada com sucesso.')
+      } catch (erro) {
+        mostrarErro(mostrarCamera, erro)
+      }
+    })
+
+    document.querySelector('#camera-parar').addEventListener('click', () => {
+      const haviaSessao = captura.camera.parar()
+      mostrarCamera(haviaSessao ? 'Câmera encerrada.' : 'A câmera já estava inativa.')
+    })
+
+    document.querySelector('#camera-frame').addEventListener('click', async () => {
+      try {
+        const blob = await captura.camera.frame()
+        baixarBlob(blob, 'camera.png')
+        mostrarCamera(`Frame capturado (${blob.type}, ${blob.size} bytes).`)
+      } catch (erro) {
+        mostrarErro(mostrarCamera, erro)
+      }
+    })
+
+    document.querySelector('#camera-sem-preview').addEventListener('click', async () => {
+      try {
+        const { video } = await captura.camera.iniciar()
+        mostrarCamera(
+          `Câmera ativa sem preview: ${video.videoWidth}×${video.videoHeight}. ` +
+          'Use "Baixar PNG" para capturar mesmo sem exibir o vídeo.'
+        )
+      } catch (erro) {
+        mostrarErro(mostrarCamera, erro)
+      }
+    })
+
+    // Captura de tela
+
+    document.querySelector('#tela-iniciar').addEventListener('click', async () => {
+      try {
+        const { video } = await captura.tela.iniciar({
+          elemento: '#tela',
+          audio: telaAudio.checked
+        })
+
+        telaEstavaAtiva = true
+        mostrarTela(
+          `Compartilhamento ativo: ${video.videoWidth}×${video.videoHeight}.`
+        )
+      } catch (erro) {
+        mostrarErro(mostrarTela, erro)
+      }
+    })
+
+    document.querySelector('#tela-parar').addEventListener('click', () => {
+      const haviaSessao = captura.tela.parar()
+      telaEstavaAtiva = false
+      mostrarTela(haviaSessao ? 'Compartilhamento encerrado.' : 'A captura já estava inativa.')
+    })
+
+    document.querySelector('#tela-frame').addEventListener('click', async () => {
+      try {
+        const blob = await captura.tela.frame()
+        baixarBlob(blob, 'tela.png')
+        mostrarTela(`Frame capturado (${blob.type}, ${blob.size} bytes).`)
+      } catch (erro) {
+        mostrarErro(mostrarTela, erro)
+      }
+    })
+
+    document.querySelector('#tela-sem-preview').addEventListener('click', async () => {
+      try {
+        const { video } = await captura.tela.iniciar({ audio: telaAudio.checked })
+        telaEstavaAtiva = true
+        mostrarTela(
+          `Compartilhamento ativo sem preview: ${video.videoWidth}×${video.videoHeight}. ` +
+          'Use "Baixar PNG" para capturar mesmo sem exibir o vídeo.'
+        )
+      } catch (erro) {
+        mostrarErro(mostrarTela, erro)
+      }
+    })
+
+    // Detecta o encerramento feito pela interface do navegador.
+    setInterval(() => {
+      const ativa = captura.tela.ativa()
+
+      if (telaEstavaAtiva && !ativa) {
+        telaEstavaAtiva = false
+        mostrarTela('O compartilhamento foi encerrado pela interface do navegador.')
+      }
+    }, 500)
+
+    window.addEventListener('beforeunload', () => {
+      captura.camera.parar()
+      captura.tela.parar()
+    })
+  </script>
+</body>
+</html>
